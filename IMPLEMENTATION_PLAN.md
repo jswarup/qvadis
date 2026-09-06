@@ -671,17 +671,17 @@ qemu_status_t qemu_console_write(
 
 Create `src/integration/qemu_console.cpp`:
 
-- [ ] Wrap QEMU `ChardevBackend` as console
-- [ ] Implement output buffering
-- [ ] Callback-based input delivery
+- [x] Wrap QEMU `ChardevBackend` as console
+- [x] Implement output buffering
+- [x] Callback-based input delivery
 
 #### Task 7.3: Console Tests
 
 Create `tests/phase_7_tests/`:
 
-- [ ] Console output streaming
-- [ ] Console input injection
-- [ ] Bidirectional I/O
+- [x] Console output streaming
+- [x] Console input injection
+- [x] Bidirectional I/O
 
 ### Success Criteria
 - ✅ Console output readable from host
@@ -740,18 +740,18 @@ qemu_status_t qemu_runtime_unsubscribe_event(
 
 Create `src/integration/qemu_event_dispatcher.cpp`:
 
-- [ ] Thread-safe event queue
-- [ ] Callback invocation during `qemu_runtime_pump_events()`
-- [ ] Event filtering by type
+- [x] Thread-safe event queue
+- [x] Callback invocation during `qemu_runtime_pump_events()`
+- [x] Event filtering by type
 
 #### Task 8.3: Event Tests
 
 Create `tests/phase_8_tests/`:
 
-- [ ] Subscribe/unsubscribe operations
-- [ ] Event delivery correctness
-- [ ] Callback invocation timing
-- [ ] Multiple subscribers
+- [x] Subscribe/unsubscribe operations
+- [x] Event delivery correctness
+- [x] Callback invocation timing
+- [x] Multiple subscribers
 
 ### Success Criteria
 - ✅ Event subscription works

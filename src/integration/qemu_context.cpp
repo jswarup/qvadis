@@ -46,6 +46,7 @@ qemu_status_t QemuContext::Start() {
     }
 
     state_ = RuntimeState::Running;
+    event_dispatcher_.Dispatch(QEMU_EVENT_MACHINE_STARTED, "Machine started");
     cv_.notify_all();
     return QEMU_OK;
 }
@@ -57,6 +58,7 @@ qemu_status_t QemuContext::Pause() {
     }
 
     state_ = RuntimeState::Paused;
+    event_dispatcher_.Dispatch(QEMU_EVENT_MACHINE_PAUSED, "Machine paused");
     cv_.notify_all();
     return QEMU_OK;
 }
@@ -68,6 +70,7 @@ qemu_status_t QemuContext::Resume() {
     }
 
     state_ = RuntimeState::Running;
+    event_dispatcher_.Dispatch(QEMU_EVENT_MACHINE_STARTED, "Machine resumed");
     cv_.notify_all();
     return QEMU_OK;
 }
@@ -79,6 +82,7 @@ qemu_status_t QemuContext::Stop() {
     }
 
     state_ = RuntimeState::Stopped;
+    event_dispatcher_.Dispatch(QEMU_EVENT_MACHINE_STOPPED, "Machine stopped");
     cv_.notify_all();
     return QEMU_OK;
 }
@@ -90,14 +94,15 @@ qemu_status_t QemuContext::PumpEvents(uint32_t timeout_ms) {
     }
 
     if (timeout_ms > 0) {
-        // Sleep or wait on condition variable up to timeout
-        // In full QEMU integration, this invokes aio_poll / main_loop_wait
         std::unique_lock<std::recursive_mutex> ulock(mutex_, std::adopt_lock);
         cv_.wait_for(ulock, std::chrono::milliseconds(timeout_ms), [this] {
             return state_ != RuntimeState::Running;
         });
-        ulock.release(); // release adoption since lock was already held
+        ulock.release();
     }
+
+    // Process pending dispatched events and notify subscribers
+    event_dispatcher_.ProcessPendingEvents();
 
     return QEMU_OK;
 }

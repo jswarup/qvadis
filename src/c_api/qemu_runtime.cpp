@@ -1,6 +1,7 @@
 ﻿#include "qemu_runtime.h"
 #include "../integration/qemu_context.h"
 #include "../integration/qemu_machine.h"
+#include "../integration/qemu_console.h"
 #include <cstdlib>
 #include <cstring>
 #include <memory>
@@ -19,9 +20,7 @@ struct qemu_disk_handle {
 };
 
 struct qemu_console_handle {
-    char console_id[64];
-    qemu_console_data_cb callback;
-    void* user_data;
+    std::unique_ptr<qvadis::QemuConsole> console_impl;
 };
 
 extern "C" {
@@ -184,7 +183,7 @@ qemu_status_t qemu_disk_write(
     return disk->disk_ptr->Write(offset, buffer, length, out_bytes_written);
 }
 
-/* === Phase 7: Console Management === */
+/* === Phase 7: Console & Character Device Streaming === */
 
 qemu_status_t qemu_machine_attach_console(
     qemu_machine_t machine,
@@ -198,13 +197,22 @@ qemu_status_t qemu_machine_attach_console(
     auto console = new (std::nothrow) qemu_console_handle();
     if (!console) return QEMU_ERR_OUT_OF_MEMORY;
 
-    std::strncpy(console->console_id, console_id, sizeof(console->console_id) - 1);
-    console->console_id[sizeof(console->console_id) - 1] = '\0';
-    console->callback = on_data;
-    console->user_data = user_data;
+    console->console_impl = std::make_unique<qvadis::QemuConsole>(console_id);
+    if (on_data) {
+        console->console_impl->SetOutputCallback(on_data, user_data);
+    }
 
     *out_console = console;
     return QEMU_OK;
+}
+
+qemu_status_t qemu_console_set_input_callback(
+    qemu_console_t console,
+    qemu_console_read_callback_t callback,
+    void* user_data
+) {
+    if (!console || !console->console_impl) return QEMU_ERR_INVALID_ARG;
+    return console->console_impl->SetInputCallback(callback, user_data);
 }
 
 qemu_status_t qemu_console_write(
@@ -213,15 +221,29 @@ qemu_status_t qemu_console_write(
     size_t length,
     size_t* out_bytes_written
 ) {
-    if (!console || !buffer) return QEMU_ERR_INVALID_ARG;
+    if (!console || !console->console_impl || !buffer) return QEMU_ERR_INVALID_ARG;
+    return console->console_impl->Write(buffer, length, out_bytes_written);
+}
 
-    if (console->callback) {
-        console->callback(buffer, length, console->user_data);
-    }
-    if (out_bytes_written) {
-        *out_bytes_written = length;
-    }
-    return QEMU_OK;
+/* === Phase 8: Event Callbacks & Notifications === */
+
+qemu_status_t qemu_runtime_subscribe_event(
+    qemu_runtime_t runtime,
+    qemu_event_type_t event_type,
+    qemu_event_callback_t callback,
+    void* user_data
+) {
+    if (!runtime || !runtime->ctx || !callback) return QEMU_ERR_INVALID_ARG;
+    return runtime->ctx->GetEventDispatcher().Subscribe(event_type, callback, user_data);
+}
+
+qemu_status_t qemu_runtime_unsubscribe_event(
+    qemu_runtime_t runtime,
+    qemu_event_type_t event_type,
+    qemu_event_callback_t callback
+) {
+    if (!runtime || !runtime->ctx || !callback) return QEMU_ERR_INVALID_ARG;
+    return runtime->ctx->GetEventDispatcher().Unsubscribe(event_type, callback);
 }
 
 } // extern "C"

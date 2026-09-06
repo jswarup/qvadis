@@ -196,7 +196,13 @@ QEMU_RUNTIME_API qemu_status_t qemu_disk_write(
     size_t* out_bytes_written
 );
 
-/* === Console / Chardev Management === */
+/* === Phase 7: Console & Character Device Streaming === */
+
+typedef void (*qemu_console_read_callback_t)(
+    const uint8_t* data,
+    size_t length,
+    void* user_data
+);
 
 QEMU_RUNTIME_API qemu_status_t qemu_machine_attach_console(
     qemu_machine_t machine,
@@ -206,11 +212,50 @@ QEMU_RUNTIME_API qemu_status_t qemu_machine_attach_console(
     qemu_console_t* out_console
 );
 
+QEMU_RUNTIME_API qemu_status_t qemu_console_set_input_callback(
+    qemu_console_t console,
+    qemu_console_read_callback_t callback,
+    void* user_data
+);
+
 QEMU_RUNTIME_API qemu_status_t qemu_console_write(
     qemu_console_t console,
     const uint8_t* buffer,
     size_t length,
     size_t* out_bytes_written
+);
+
+/* === Phase 8: Event Callbacks & Notifications === */
+
+typedef enum {
+    QEMU_EVENT_MACHINE_STARTED = 1,
+    QEMU_EVENT_MACHINE_PAUSED = 2,
+    QEMU_EVENT_MACHINE_STOPPED = 3,
+    QEMU_EVENT_DISK_READ_COMPLETE = 4,
+    QEMU_EVENT_DISK_WRITE_COMPLETE = 5,
+    QEMU_EVENT_ERROR = 255
+} qemu_event_type_t;
+
+typedef struct {
+    qemu_event_type_t type;
+    uint64_t timestamp_ns;
+    void* context;
+    const char* message;
+} qemu_event_t;
+
+typedef void (*qemu_event_callback_t)(const qemu_event_t* event, void* user_data);
+
+QEMU_RUNTIME_API qemu_status_t qemu_runtime_subscribe_event(
+    qemu_runtime_t runtime,
+    qemu_event_type_t event_type,
+    qemu_event_callback_t callback,
+    void* user_data
+);
+
+QEMU_RUNTIME_API qemu_status_t qemu_runtime_unsubscribe_event(
+    qemu_runtime_t runtime,
+    qemu_event_type_t event_type,
+    qemu_event_callback_t callback
 );
 
 #ifdef __cplusplus

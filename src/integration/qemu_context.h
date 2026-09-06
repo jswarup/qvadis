@@ -1,6 +1,7 @@
-#pragma once
+﻿#pragma once
 
 #include "qemu_runtime.h"
+#include "qemu_event_dispatcher.h"
 #include <string>
 #include <vector>
 #include <mutex>
@@ -45,6 +46,9 @@ public:
     // Machine Management
     qemu_status_t CreateMachine(const char* machine_type, QemuMachineContext** out_machine);
 
+    // Event Dispatcher
+    QemuEventDispatcher& GetEventDispatcher() { return event_dispatcher_; }
+
     // QEMU Integration Hooks
     bool InitQemuCore(int argc, char** argv);
     bool PollQemuAio(uint32_t timeout_ms);
@@ -71,6 +75,7 @@ private:
     std::string rootfs_path_;
 
     std::vector<std::unique_ptr<QemuMachineContext>> machines_;
+    QemuEventDispatcher event_dispatcher_;
     void* qemu_aio_context_{nullptr};
 };
 

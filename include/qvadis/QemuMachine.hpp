@@ -4,8 +4,38 @@
 #include <string>
 #include <stdexcept>
 #include <memory>
+#include <vector>
 
 namespace qvadis {
+
+class QemuDiskHandle {
+public:
+    explicit QemuDiskHandle(qemu_disk_t handle) : handle_(handle) {}
+    ~QemuDiskHandle() = default;
+
+    size_t Read(uint64_t offset, uint8_t* buffer, size_t length) {
+        size_t read_bytes = 0;
+        qemu_status_t status = qemu_disk_read(handle_, offset, buffer, length, &read_bytes);
+        if (status != QEMU_OK) {
+            throw std::runtime_error("Disk read failed: code " + std::to_string(status));
+        }
+        return read_bytes;
+    }
+
+    size_t Write(uint64_t offset, const uint8_t* buffer, size_t length) {
+        size_t written_bytes = 0;
+        qemu_status_t status = qemu_disk_write(handle_, offset, buffer, length, &written_bytes);
+        if (status != QEMU_OK) {
+            throw std::runtime_error("Disk write failed: code " + std::to_string(status));
+        }
+        return written_bytes;
+    }
+
+    qemu_disk_t GetRawHandle() const { return handle_; }
+
+private:
+    qemu_disk_t handle_{nullptr};
+};
 
 class QemuMachine {
 public:
@@ -54,6 +84,22 @@ public:
         qemu_status_t status = qemu_machine_configure_memory(handle_, size_mb);
         if (status != QEMU_OK) {
             throw std::runtime_error("Failed to configure memory: error code " + std::to_string(status));
+        }
+    }
+
+    qemu_disk_t AttachDisk(const std::string& path, qemu_disk_format_t format, const std::string& device_id) {
+        qemu_disk_t disk = nullptr;
+        qemu_status_t status = qemu_machine_attach_disk(handle_, path.c_str(), format, device_id.c_str(), &disk);
+        if (status != QEMU_OK || !disk) {
+            throw std::runtime_error("Failed to attach disk: error code " + std::to_string(status));
+        }
+        return disk;
+    }
+
+    void DetachDisk(qemu_disk_t disk) {
+        qemu_status_t status = qemu_machine_detach_disk(handle_, disk);
+        if (status != QEMU_OK) {
+            throw std::runtime_error("Failed to detach disk: error code " + std::to_string(status));
         }
     }
 

@@ -1,4 +1,4 @@
-﻿#ifndef QEMU_RUNTIME_H
+#ifndef QEMU_RUNTIME_H
 #define QEMU_RUNTIME_H
 
 #include <stddef.h>
@@ -178,6 +178,22 @@ QEMU_RUNTIME_API qemu_status_t qemu_machine_attach_disk(
 QEMU_RUNTIME_API qemu_status_t qemu_machine_detach_disk(
     qemu_machine_t machine,
     qemu_disk_t disk
+);
+
+QEMU_RUNTIME_API qemu_status_t qemu_disk_read(
+    qemu_disk_t disk,
+    uint64_t offset,
+    uint8_t* buffer,
+    size_t length,
+    size_t* out_bytes_read
+);
+
+QEMU_RUNTIME_API qemu_status_t qemu_disk_write(
+    qemu_disk_t disk,
+    uint64_t offset,
+    const uint8_t* buffer,
+    size_t length,
+    size_t* out_bytes_written
 );
 
 /* === Console / Chardev Management === */

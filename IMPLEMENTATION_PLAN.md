@@ -515,9 +515,9 @@ qemu_status_t qemu_machine_destroy(qemu_machine_t machine);
 
 Create `src/integration/qemu_machine.cpp`:
 
-- [ ] Opaque `QemuMachine` class wrapping `MachineState`
-- [ ] CPU and memory configuration methods
-- [ ] Machine state tracking
+- [x] Opaque `QemuMachine` class wrapping `MachineState`
+- [x] CPU and memory configuration methods
+- [x] Machine state tracking
 
 #### Task 5.3: C++ API Wrapper
 
@@ -608,18 +608,18 @@ qemu_status_t qemu_disk_write(
 
 Create `src/integration/qemu_disk.cpp`:
 
-- [ ] Wrap `BlockBackend` in opaque handle
-- [ ] Implement disk read/write operations
-- [ ] Handle format detection and conversion
+- [x] Wrap `BlockBackend` in opaque handle
+- [x] Implement disk read/write operations
+- [x] Handle format detection and conversion
 
 #### Task 6.3: Integration Tests
 
 Create `tests/phase_6_tests/`:
 
-- [ ] Create and attach virtual disk
-- [ ] Read/write operations
-- [ ] Disk detachment
-- [ ] Multiple disk support
+- [x] Create and attach virtual disk
+- [x] Read/write operations
+- [x] Disk detachment
+- [x] Multiple disk support
 
 ### Success Criteria
 - ✅ Disk attachment/detachment works

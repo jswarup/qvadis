@@ -69,6 +69,14 @@ add_executable(test_phase_3_4 tests/phase_3_4_tests/test_phase_3_4.cpp)
 target_link_libraries(test_phase_3_4 PRIVATE qemuruntime_static)
 add_test(NAME test_phase_3_4 COMMAND test_phase_3_4)
 
+add_executable(test_phase_5 tests/phase_5_tests/test_phase_5.cpp)
+target_link_libraries(test_phase_5 PRIVATE qemuruntime_static)
+add_test(NAME test_phase_5 COMMAND test_phase_5)
+
+add_executable(test_phase_6 tests/phase_6_tests/test_phase_6.cpp)
+target_link_libraries(test_phase_6 PRIVATE qemuruntime_static)
+add_test(NAME test_phase_6 COMMAND test_phase_6)
+
 # Install rules
 include(GNUInstallDirs)
 install(TARGETS qemuruntime qemuruntime_static

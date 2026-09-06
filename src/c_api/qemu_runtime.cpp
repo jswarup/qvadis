@@ -1,5 +1,6 @@
 ﻿#include "qemu_runtime.h"
 #include "../integration/qemu_context.h"
+#include "../integration/qemu_machine.h"
 #include <cstdlib>
 #include <cstring>
 #include <memory>
@@ -10,13 +11,11 @@ struct qemu_runtime_handle {
 };
 
 struct qemu_machine_handle {
-    qvadis::QemuMachineContext* machine_ctx;
+    std::unique_ptr<qvadis::QemuMachineImpl> machine_impl;
 };
 
 struct qemu_disk_handle {
-    char path[512];
-    qemu_disk_format_t format;
-    char device_id[64];
+    qvadis::QemuDisk* disk_ptr;
 };
 
 struct qemu_console_handle {
@@ -86,6 +85,8 @@ const char* qemu_runtime_version(void) {
     return "0.1.0";
 }
 
+/* === Phase 5: Machine Management === */
+
 qemu_status_t qemu_runtime_create_machine(
     qemu_runtime_t runtime,
     const char* machine_type,
@@ -93,14 +94,11 @@ qemu_status_t qemu_runtime_create_machine(
 ) {
     if (!runtime || !runtime->ctx || !out_machine) return QEMU_ERR_INVALID_ARG;
 
-    qvadis::QemuMachineContext* machine_ctx = nullptr;
-    qemu_status_t status = runtime->ctx->CreateMachine(machine_type, &machine_ctx);
-    if (status != QEMU_OK) return status;
-
     auto m_handle = new (std::nothrow) qemu_machine_handle();
     if (!m_handle) return QEMU_ERR_OUT_OF_MEMORY;
 
-    m_handle->machine_ctx = machine_ctx;
+    std::string type = machine_type ? machine_type : "q35";
+    m_handle->machine_impl = std::make_unique<qvadis::QemuMachineImpl>(type);
     *out_machine = m_handle;
     return QEMU_OK;
 }
@@ -110,16 +108,16 @@ qemu_status_t qemu_machine_configure_cpu(
     const char* cpu_model,
     uint32_t num_cpus
 ) {
-    if (!machine || !machine->machine_ctx || !cpu_model) return QEMU_ERR_INVALID_ARG;
-    return machine->machine_ctx->ConfigureCPU(cpu_model, num_cpus);
+    if (!machine || !machine->machine_impl || !cpu_model) return QEMU_ERR_INVALID_ARG;
+    return machine->machine_impl->ConfigureCPU(cpu_model, num_cpus);
 }
 
 qemu_status_t qemu_machine_configure_memory(
     qemu_machine_t machine,
     uint64_t size_mb
 ) {
-    if (!machine || !machine->machine_ctx) return QEMU_ERR_INVALID_ARG;
-    return machine->machine_ctx->ConfigureMemory(size_mb);
+    if (!machine || !machine->machine_impl) return QEMU_ERR_INVALID_ARG;
+    return machine->machine_impl->ConfigureMemory(size_mb);
 }
 
 qemu_status_t qemu_machine_destroy(qemu_machine_t machine) {
@@ -128,6 +126,8 @@ qemu_status_t qemu_machine_destroy(qemu_machine_t machine) {
     return QEMU_OK;
 }
 
+/* === Phase 6: Storage & Disk I/O === */
+
 qemu_status_t qemu_machine_attach_disk(
     qemu_machine_t machine,
     const char* path,
@@ -135,18 +135,19 @@ qemu_status_t qemu_machine_attach_disk(
     const char* device_id,
     qemu_disk_t* out_disk
 ) {
-    if (!machine || !path || !device_id || !out_disk) return QEMU_ERR_INVALID_ARG;
+    if (!machine || !machine->machine_impl || !path || !device_id || !out_disk) {
+        return QEMU_ERR_INVALID_ARG;
+    }
 
-    auto disk = new (std::nothrow) qemu_disk_handle();
-    if (!disk) return QEMU_ERR_OUT_OF_MEMORY;
+    qvadis::QemuDisk* disk_ptr = nullptr;
+    qemu_status_t status = machine->machine_impl->AttachDisk(path, format, device_id, &disk_ptr);
+    if (status != QEMU_OK) return status;
 
-    std::strncpy(disk->path, path, sizeof(disk->path) - 1);
-    disk->path[sizeof(disk->path) - 1] = '\0';
-    disk->format = format;
-    std::strncpy(disk->device_id, device_id, sizeof(disk->device_id) - 1);
-    disk->device_id[sizeof(disk->device_id) - 1] = '\0';
+    auto disk_handle = new (std::nothrow) qemu_disk_handle();
+    if (!disk_handle) return QEMU_ERR_OUT_OF_MEMORY;
 
-    *out_disk = disk;
+    disk_handle->disk_ptr = disk_ptr;
+    *out_disk = disk_handle;
     return QEMU_OK;
 }
 
@@ -154,10 +155,36 @@ qemu_status_t qemu_machine_detach_disk(
     qemu_machine_t machine,
     qemu_disk_t disk
 ) {
-    if (!machine || !disk) return QEMU_ERR_INVALID_ARG;
+    if (!machine || !machine->machine_impl || !disk) return QEMU_ERR_INVALID_ARG;
+
+    qemu_status_t status = machine->machine_impl->DetachDisk(disk->disk_ptr);
     delete disk;
-    return QEMU_OK;
+    return status;
 }
+
+qemu_status_t qemu_disk_read(
+    qemu_disk_t disk,
+    uint64_t offset,
+    uint8_t* buffer,
+    size_t length,
+    size_t* out_bytes_read
+) {
+    if (!disk || !disk->disk_ptr) return QEMU_ERR_INVALID_ARG;
+    return disk->disk_ptr->Read(offset, buffer, length, out_bytes_read);
+}
+
+qemu_status_t qemu_disk_write(
+    qemu_disk_t disk,
+    uint64_t offset,
+    const uint8_t* buffer,
+    size_t length,
+    size_t* out_bytes_written
+) {
+    if (!disk || !disk->disk_ptr) return QEMU_ERR_INVALID_ARG;
+    return disk->disk_ptr->Write(offset, buffer, length, out_bytes_written);
+}
+
+/* === Phase 7: Console Management === */
 
 qemu_status_t qemu_machine_attach_console(
     qemu_machine_t machine,

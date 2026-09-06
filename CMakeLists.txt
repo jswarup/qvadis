@@ -1,0 +1,73 @@
+﻿cmake_minimum_required(VERSION 3.20)
+project(qvadis VERSION 0.1.0 LANGUAGES C CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Module path
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+# Find optional QEMU dependency
+find_package(QEMU QUIET)
+
+# Include directories
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/qvadis
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# Core library
+add_library(qemuruntime SHARED
+    src/integration/qemu_context.cpp
+    src/c_api/qemu_runtime.cpp
+    src/cpp_wrapper/QemuRuntime.cpp
+)
+
+target_compile_definitions(qemuruntime PRIVATE QEMU_RUNTIME_EXPORTS)
+
+target_include_directories(qemuruntime PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/qvadis>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Set library properties
+set_target_properties(qemuruntime PROPERTIES
+    VERSION ${PROJECT_VERSION}
+    SOVERSION 0
+    OUTPUT_NAME "qemuruntime"
+)
+
+# Also create static variant
+add_library(qemuruntime_static STATIC
+    src/integration/qemu_context.cpp
+    src/c_api/qemu_runtime.cpp
+    src/cpp_wrapper/QemuRuntime.cpp
+)
+target_compile_definitions(qemuruntime_static PUBLIC QEMU_RUNTIME_STATIC)
+target_include_directories(qemuruntime_static PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/qvadis>
+    $<INSTALL_INTERFACE:include>
+)
+
+# Testing
+enable_testing()
+add_executable(test_qvadis tests/test_qvadis.cpp)
+target_link_libraries(test_qvadis PRIVATE qemuruntime_static)
+add_test(NAME test_qvadis COMMAND test_qvadis)
+
+# Install rules
+include(GNUInstallDirs)
+install(TARGETS qemuruntime qemuruntime_static
+    EXPORT QemuRuntimeTargets
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+install(DIRECTORY include/qvadis DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

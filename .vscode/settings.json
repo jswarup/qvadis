@@ -1,0 +1,13 @@
+﻿{
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "*.h": "c",
+        "*.hpp": "cpp",
+        "iostream": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "memory": "cpp",
+        "mutex": "cpp",
+        "condition_variable": "cpp"
+    }
+}

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "qemu_runtime.h"
 #include <string>
@@ -44,6 +44,10 @@ public:
 
     // Machine Management
     qemu_status_t CreateMachine(const char* machine_type, QemuMachineContext** out_machine);
+
+    // QEMU Integration Hooks
+    bool InitQemuCore(int argc, char** argv);
+    bool PollQemuAio(uint32_t timeout_ms);
 
 private:
     template<typename F>

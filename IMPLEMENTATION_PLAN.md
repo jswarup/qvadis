@@ -429,11 +429,11 @@ void qemu_runtime_destroy(qemu_runtime_t runtime) {
 
 Create `src/integration/qemu_init_hooks.cpp`:
 
-- [ ] **Patch or wrap QEMU main entry**:
+- [x] **Patch or wrap QEMU main entry**:
   - Instead of calling `main()`, call `qemu_init()` and manage event loop manually
   - Hook into `qemu_main_loop_wait()` for non-blocking integration
 
-- [ ] **Event loop integration**:
+- [x] **Event loop integration**:
   ```cpp
   bool QemuContext::PumpEvents(uint32_t timeout_ms) {
       std::unique_lock<std::mutex> lock(qemu_mutex_);
@@ -450,21 +450,21 @@ Create `src/integration/qemu_init_hooks.cpp`:
 
 Create top-level and modular CMake files:
 
-- [ ] `CMakeLists.txt` - Top-level project definition
-- [ ] `src/CMakeLists.txt` - C API and integration code
-- [ ] `src/c_api/CMakeLists.txt` - C API library target
-- [ ] `src/cpp_wrapper/CMakeLists.txt` - C++ wrapper library
-- [ ] Link against QEMU's build output
+- [x] `CMakeLists.txt` - Top-level project definition
+- [x] `src/CMakeLists.txt` - C API and integration code
+- [x] `src/c_api/CMakeLists.txt` - C API library target
+- [x] `src/cpp_wrapper/CMakeLists.txt` - C++ wrapper library
+- [x] Link against QEMU's build output
 
 #### Task 3.6: Unit Tests
 
 Create `tests/phase_3_4_tests/`:
 
-- [ ] Test C API creation/destruction
-- [ ] Test initialization with valid config
-- [ ] Test lifecycle transitions (create → init → start → stop → destroy)
-- [ ] Test event loop pumping
-- [ ] Test thread-safety (concurrent access to runtime)
+- [x] Test C API creation/destruction
+- [x] Test initialization with valid config
+- [x] Test lifecycle transitions (create → init → start → stop → destroy)
+- [x] Test event loop pumping
+- [x] Test thread-safety (concurrent access to runtime)
 
 ### Success Criteria
 - ✅ C API header complete and documented

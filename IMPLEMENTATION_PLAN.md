@@ -146,13 +146,13 @@ Document the following in `docs/QEMU_INTERNALS.md`:
 
 #### Task 1.4: Test QEMU Functionality
 
-- [ ] Create test harness in `tests/phase_1_build_tests/`:
+- [x] Create test harness in `tests/phase_1_build_tests/`:
   - Verify QEMU executable runs
   - Boot minimal Linux kernel (or OVMF BIOS)
   - Verify x86_64 Q35 machine type works
   - Verify TCG execution
 
-- [ ] Document build configuration for both platforms
+- [x] Document build configuration for both platforms
 
 ### Success Criteria
 - ✅ QEMU compiles without errors on Linux and Windows

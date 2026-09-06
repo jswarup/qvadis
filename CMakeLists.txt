@@ -85,6 +85,10 @@ add_executable(test_phase_8 tests/phase_8_tests/test_phase_8.cpp)
 target_link_libraries(test_phase_8 PRIVATE qemuruntime_static)
 add_test(NAME test_phase_8 COMMAND test_phase_8)
 
+add_executable(test_phase_10 tests/phase_10_tests/test_phase_10.cpp)
+target_link_libraries(test_phase_10 PRIVATE qemuruntime_static)
+add_test(NAME test_phase_10 COMMAND test_phase_10)
+
 # Install rules
 include(GNUInstallDirs)
 install(TARGETS qemuruntime qemuruntime_static

@@ -196,6 +196,7 @@ QEMU_RUNTIME_API qemu_status_t qemu_disk_write(
     size_t* out_bytes_written
 );
 
+/* === Console / Chardev Management === */
 /* === Phase 7: Console & Character Device Streaming === */
 
 typedef void (*qemu_console_read_callback_t)(
@@ -257,6 +258,33 @@ QEMU_RUNTIME_API qemu_status_t qemu_runtime_unsubscribe_event(
     qemu_event_type_t event_type,
     qemu_event_callback_t callback
 );
+
+/* === Phase 10: QMP/QAPI Integration === */
+
+typedef struct {
+    char* response;        /* JSON response string from QMP */
+    size_t response_len;
+} qemu_qmp_response_t;
+
+QEMU_RUNTIME_API void qemu_qmp_response_free(qemu_qmp_response_t* resp);
+
+QEMU_RUNTIME_API qemu_status_t qemu_runtime_execute_qmp_command(
+    qemu_runtime_t runtime,
+    const char* command_json,
+    qemu_qmp_response_t* out_response
+);
+
+QEMU_RUNTIME_API qemu_status_t qemu_machine_query_status(
+    qemu_machine_t machine,
+    char** out_status_json
+);
+
+QEMU_RUNTIME_API qemu_status_t qemu_machine_query_stats(
+    qemu_machine_t machine,
+    char** out_stats_json
+);
+
+QEMU_RUNTIME_API void qemu_string_free(char* str);
 
 #ifdef __cplusplus
 }

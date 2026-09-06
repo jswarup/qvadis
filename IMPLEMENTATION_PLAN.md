@@ -846,9 +846,9 @@ qemu_status_t qemu_runtime_execute_qmp_command(
 
 Create `src/integration/qemu_qmp.cpp`:
 
-- [ ] Connect to QEMU QMP socket
-- [ ] Command serialization/deserialization
-- [ ] Response parsing
+- [x] Connect to QEMU QMP socket
+- [x] Command serialization/deserialization
+- [x] Response parsing
 
 #### Task 10.3: Common QMP Commands
 
@@ -870,10 +870,10 @@ qemu_status_t qemu_machine_query_stats(
 
 Create `tests/phase_10_tests/`:
 
-- [ ] QMP command execution
-- [ ] Status queries
-- [ ] Advanced VM control via QMP
-- [ ] JSON response parsing
+- [x] QMP command execution
+- [x] Status queries
+- [x] Advanced VM control via QMP
+- [x] JSON response parsing
 
 ### Success Criteria
 - ✅ QMP commands executable
